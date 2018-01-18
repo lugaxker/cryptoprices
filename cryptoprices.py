@@ -1,5 +1,7 @@
 #!/usr/bin/python3.5
 # -*- coding: utf-8 -*-
+#
+# Par lugaxker
 
 # -----------------------------------------------------------------------------
 # Fonction colorize
@@ -20,17 +22,19 @@ def colorize(s, color, bold=False):
         return s
     
 # -----------------------------------------------------------------------------
+# Début du script
 
 print('')
 print('--- JETONS CRYPTOGRAPHIQUES ---')
 
+
 # Affichage de l'horodatage
 import datetime
-utc = datetime.datetime.utcnow().strftime("%Y%m%d %H%M%S")
+utc = datetime.datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S UTC")
 print('')
 print('Date' + '  {}'.format(utc))
 
-# Lecture du fichier des fonds en cryptomonnaie 
+# Lecture du fichier des cryptojetons
 currencies_id = []
 currencies_q = []
 currencies_fiat = []
@@ -46,7 +50,7 @@ for s in assetdata:
     currencies_fiat += [float(s[2])]
     
 assetsfile.close()
-    
+
 # Récupération des données du marché
 import urllib.request as urll
 marketurl = 'https://api.coinmarketcap.com/v1/ticker/?convert=EUR&limit=150'
@@ -65,10 +69,10 @@ glmarketcap = int( globaldata["total_market_cap_usd"] )
 gmc = '{:,}'.format(glmarketcap).replace(',',' ')
 btcdominance = float( globaldata["bitcoin_percentage_of_market_cap"] )
 
-print('Capitalisation boursière totale des cryptomonnaies' + '  {} USD\t\t\t\tDominance de BTC : {} %'.format(gmc,btcdominance))
+# Affichage de la capitalisation boursière et du pourcentage de dominance de Bitcoin (BTC)
+print('Capitalisation boursière totale des cryptojetons' + '  {} USD\t\t\t\tDominance de BTC : {} %'.format(gmc,btcdominance))
 
-
-
+# Affichage des prix et des gains/pertes
 ncurrencies = len(currencies_id)
 print('')
 print(colorize('Monnaie\t\tRang\t\tPrix (USD)\tPrix (EUR)\tPrix (BTC)\t24h-chg (%)\tQuantité\tValeur (EUR)\tApport (EUR)\tGain/perte (%)','yellow'))
@@ -102,6 +106,6 @@ totalprofit = 100*(totalvalue - totalinvestment)/totalinvestment
 print(colorize('\t\t\t\t\t\t\t\t\t\t\t\tTOTAL\t\t{:.2f}\t\t{:.2f}\t\t{:+.2f}'.format(totalvalue,totalinvestment,totalprofit), 'red', True))
 
 
-# Affichage de la source
+# Affichage de la source (coinmarketcap.com)
 print('')
 print('Source : coinmarketcap.com')
