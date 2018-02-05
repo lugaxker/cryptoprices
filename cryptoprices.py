@@ -39,7 +39,7 @@ currencies_id = []
 currencies_q = []
 currencies_fiat = []
 
-assetsfile = open("cryptotokens.dat", "r")
+assetsfile = open("assets.dat", "r")
 
 assetdata = assetsfile.read()
 assetdata = assetdata.split('\n')
