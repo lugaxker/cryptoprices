@@ -65,7 +65,7 @@ print('Capitalisation boursière totale des cryptojetons' + '  {} USD\t\t\t\tDom
 print()
 
 # Affichage des prix et des gains/pertes
-print(colorize('Monnaie\t\tRang\t\tPrix (USD)\tPrix (EUR)\tPrix (BTC)\t24h-chg (%)\tQuantité\tValeur (EUR)\tApport (EUR)\tGain/perte (%)','yellow'))
+print(colorize('Jeton\t\tRang\t\tPrix (USD)\tPrix (EUR)\tPrix (BTC)\t24h-chg (%)\tQuantité\tValeur (EUR)\tApport (EUR)\tGain/perte (%)','yellow'))
 totalvalue = 0.
 totalinvestment = 0.
 
