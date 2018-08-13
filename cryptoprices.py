@@ -65,7 +65,7 @@ for asset in assetdata:
              "price_eur": float(t["data"]["quotes"]["EUR"]["price"]),
              "quantity": float( asset[1] ), "investment_eur": float( asset[2] )}
     if asset[0] in [1027, 1808, 1765]: # ethereum tokens
-        token["decimals"] = 9
+        token["decimals"] = 9 # for now (max: 18)
     elif asset[0] == 1720: # iota
         token["decimals"] = 6
     elif asset[0] == 1376: # neo
@@ -73,7 +73,7 @@ for asset in assetdata:
     elif asset[0] == 512: # lumen
         token["decimals"] = 7
     elif asset[0] in [328, 2632, 2655]: # monero
-        token["decimals"] = 12
+        token["decimals"] = 8 # for now (max: 12)
     else:
         token["decimals"] = 8
     tokendata.append( token )
