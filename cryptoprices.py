@@ -40,73 +40,94 @@ with open("assets.dat", "r") as f:
     assetdata = assetdata.split('\n')
     for i, a in enumerate(assetdata):
         assetdata[i] = a.split(" ")
-
-# Récupération des données du marché
+        
+# Récupération des données du marché        
 import urllib.request as urll
-marketurl = 'https://api.coinmarketcap.com/v1/ticker/?convert=EUR&limit=0'
-marketfilename = 'coinmarketcap_eur.json'
-urll.urlretrieve(marketurl, marketfilename)
-
 import json
-f = open(marketfilename)
-marketdata = json.load(f)
-f.close()
+listingurl = "https://api.coinmarketcap.com/v2/listings/"
+with urll.urlopen(listingurl, timeout=10) as u:
+    listing = json.loads(u.read().decode())
 
-with urll.urlopen("https://api.coinmarketcap.com/v1/global/") as u:
-    globaldata = json.loads(u.read().decode())
+for i, asset in enumerate(assetdata):
+    for token in listing["data"]:
+        if token["website_slug"] == asset[0]:
+            assetdata[i][0] = token["id"]
+
+# Récupération des données concernant les jetons
+tokendata = []
+for asset in assetdata:
+    tokenurl = "https://api.coinmarketcap.com/v2/ticker/{:d}/?convert=EUR".format( asset[0] )
+    with urll.urlopen(tokenurl, timeout=10) as u:
+        t = json.loads(u.read().decode())
+    token = {"symbol": t["data"]["symbol"], "rank": int(t["data"]["rank"]), 
+             "price_usd": float(t["data"]["quotes"]["USD"]["price"]), 
+             "percent_change_24h_usd": float(t["data"]["quotes"]["USD"]["percent_change_24h"]), 
+             "price_eur": float(t["data"]["quotes"]["EUR"]["price"]),
+             "quantity": float( asset[1] ), "investment_eur": float( asset[2] )}
+    if asset[0] in [1027, 1808, 1765]: # ethereum tokens
+        token["decimals"] = 9
+    elif asset[0] == 1720: # iota
+        token["decimals"] = 6
+    elif asset[0] == 1376: # neo
+        token["decimals"] = 0
+    elif asset[0] == 512: # lumen
+        token["decimals"] = 7
+    elif asset[0] in [328, 2632, 2655]: # monero
+        token["decimals"] = 12
+    else:
+        token["decimals"] = 8
+    tokendata.append( token )
+
+# Récupération des données globales    
+with urll.urlopen("https://api.coinmarketcap.com/v2/global/") as u:
+    gl = json.loads(u.read().decode())
+glmarketcap = int( gl["data"]["quotes"]["USD"]["total_market_cap"] )
+gmc = '{:,}'.format(glmarketcap).replace(',',' ')
+btcdominance = float( gl["data"]["bitcoin_percentage_of_market_cap"] )
+
+# Tri par rang
+tokendata.sort(key = lambda t: t["rank"])
 
 # Affichage de la capitalisation boursière et du pourcentage de dominance de Bitcoin (BTC)
-glmarketcap = int( globaldata["total_market_cap_usd"] )
-gmc = '{:,}'.format(glmarketcap).replace(',',' ')
-btcdominance = float( globaldata["bitcoin_percentage_of_market_cap"] )
-
 print('Capitalisation boursière totale des cryptojetons' + '  {} USD\t\t\t\tDominance de BTC : {} %'.format(gmc,btcdominance))
 print()
 
 # Affichage des prix et des gains/pertes
-print(colorize('Jeton\t\tRang\t\tPrix (USD)\tPrix (EUR)\tPrix (BTC)\t24h-chg (%)\tQuantité\tValeur (EUR)\tApport (EUR)\tGain/perte (%)','yellow'))
-totalvalue = 0.
-totalinvestment = 0.
-
-for asset in assetdata:
-    assetid = asset[0]
-    for token in marketdata:
-        
-        if ( token["id"] == assetid ):
-            symb = token["symbol"]
-            rank = token["rank"]
-            #mcap = float( token["market_cap_usd"] ) / 1e9
-            prd = token["price_usd"]
-            pre = token["price_eur"]
-            pbtc = float(token["price_btc"])
-            perchange = float(token["percent_change_24h"])
-            quantity = float( asset[1] )
-            fiat_investment = float( asset[2] )
-            value = quantity*float(pre)
-            totalvalue += value
-            totalinvestment += fiat_investment
-            if fiat_investment != 0:
-                profit = 100*(value - fiat_investment)/fiat_investment
-            else:
-                profit = 0.
+print(colorize('Jeton\t\tRang\t\tPrix (USD)\tPrix (EUR)\t24h-chg (%)\tQuantité\tValeur (EUR)\tApport (EUR)\tGain/perte (%)','yellow'))
+totalvalue = 0
+totalinvestment = 0
+rank101andabove = False
+for token in tokendata:
+    symb = token["symbol"]
+    rank = token["rank"]
+    prd = token["price_usd"]
+    pre = token["price_eur"]
+    perchange = token["percent_change_24h_usd"]
+    quantity = token["quantity"]
+    fiat_investment = token["investment_eur"] 
+    value = quantity * pre
+    totalvalue += value
+    totalinvestment += fiat_investment
+    if fiat_investment != 0:
+        profit = 100*(value - fiat_investment)/fiat_investment
+    else:
+        profit = 0
+    
+    if not rank101andabove:
+        if rank >= 100:
+            print(colorize("------", "yellow", True))
+            rank101andabove = True
             
-            row = colorize("{}".format(symb), "yellow", True)
-            row += "\t\t{}\t\t{:.7}\t\t{:.7}\t\t{:9.8f}\t{:+.2f}\t\t".format(rank, prd, pre, pbtc, perchange)
-            if assetid in ["ethereum", "omisego"]:
-                row += "{:.9f}\t".format(quantity)
-            elif assetid == "iota":
-                row += "{:.6f}\t".format(quantity)
-            elif assetid == "neo":
-                row += "{:.0f}\t\t".format(quantity)
-            else:
-                row += "{:.8f}\t".format(quantity)
-            row += "{:=6.2f}\t\t{:=6.2f}\t\t{:+.2f}".format(value, fiat_investment, profit)
-            print(row)
-            
-            break
+    row = colorize("{}".format(symb), "yellow", True)
+    row += "\t\t{:d}\t\t{:9.3f}\t{:9.3f}\t{:+.2f}\t\t".format(rank, prd, pre, perchange)
+    row += "{:.{prec}f}\t". format(quantity, prec=str(token["decimals"]))
+    if token["decimals"] == 0:
+        row += "\t"
+    row += "{:=8.2f}\t{:=8.2f}\t\t{:+.2f}".format(value, fiat_investment, profit)
+    print(row)
 
 totalprofit = 100*(totalvalue - totalinvestment)/totalinvestment
-print(colorize('\t\t\t\t\t\t\t\t\t\t\t\tTOTAL\t\t{:.2f}\t\t{:.2f}\t\t{:+.2f}'.format(totalvalue,totalinvestment,totalprofit), 'red', True))
+print(colorize('\t\t\t\t\t\t\t\t\t\tTOTAL\t\t{:8.2f}\t{:8.2f}\t\t{:+.2f}'.format(totalvalue,totalinvestment,totalprofit), 'red', True))
 print()
 
 # Affichage de la source (coinmarketcap.com)
