@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Cryptoprices : gestion d'investissement en cryptojetons
-# (C) 2018 lugaxker
+# (C) 2018 Ludovic Lars
 
 # -----------------------------------------------------------------------------
 # Fonction colorize
@@ -35,12 +35,11 @@ utc = datetime.datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")
 print('Date' + '  {} UTC'.format(utc))
 
 # Lecture du fichier des cryptojetons
-assetsfile = open("assets.dat", "r")
-assetdata = assetsfile.read()
-assetdata = assetdata.split('\n')
-for i in range( len(assetdata) ):
-    assetdata[i] = assetdata[i].split(" ")
-assetsfile.close()
+with open("assets.dat", "r") as f:
+    assetdata = f.read()
+    assetdata = assetdata.split('\n')
+    for i, a in enumerate(assetdata):
+        assetdata[i] = a.split(" ")
 
 # Récupération des données du marché
 import urllib.request as urll
