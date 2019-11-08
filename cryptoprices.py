@@ -66,6 +66,8 @@ for asset in assetdata:
              "quantity": float( asset[1] ), "investment_eur": float( asset[2] )}
     if asset[0] in [1027, 1808, 1765]: # ethereum tokens
         token["decimals"] = 9 # for now (max: 18)
+    elif asset[0] in [1230, 1312]: # steem
+        token["decimals"] = 3
     elif asset[0] == 1720: # iota
         token["decimals"] = 6
     elif asset[0] == 1376: # neo
@@ -121,7 +123,7 @@ for token in tokendata:
     row = colorize("{}".format(symb), "yellow", True)
     row += "\t\t{:d}\t\t{:9.3f}\t{:9.3f}\t{:+.2f}\t\t".format(rank, prd, pre, perchange)
     row += "{:.{prec}f}\t". format(quantity, prec=str(token["decimals"]))
-    if token["decimals"] == 0:
+    if token["decimals"] <= 3:
         row += "\t"
     row += "{:=8.2f}\t{:=8.2f}\t\t{:+.2f}".format(value, fiat_investment, profit)
     print(row)
